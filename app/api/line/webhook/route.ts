@@ -14,13 +14,19 @@ function getSupabase() {
   return createClient(url, key)
 }
 
-const LINE_CHANNEL_SECRET = process.env.NEXT_PUBLIC_LINE_CHANNEL_SECRET || ''
-const LINE_CHANNEL_ACCESS_TOKEN = process.env.NEXT_PUBLIC_LINE_CHANNEL_ACCESS_TOKEN || ''
+// LINE認証情報を取得
+function getLineCredentials() {
+  return {
+    secret: process.env.NEXT_PUBLIC_LINE_CHANNEL_SECRET || process.env.LINE_CHANNEL_SECRET || '',
+    token: process.env.NEXT_PUBLIC_LINE_CHANNEL_ACCESS_TOKEN || process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
+  }
+}
 
 // 署名検証
 function verifySignature(body: string, signature: string): boolean {
-  if (!LINE_CHANNEL_SECRET) return true
-  const hash = createHmac('sha256', LINE_CHANNEL_SECRET)
+  const { secret } = getLineCredentials()
+  if (!secret) return true
+  const hash = createHmac('sha256', secret)
     .update(body)
     .digest('base64')
   return hash === signature
@@ -59,18 +65,17 @@ type Shift = {
   end_time: string | null
 }
 
-
-console.log('LINE ENV CHECK:', {
-  hasToken: !!LINE_CHANNEL_ACCESS_TOKEN,
-  hasSecret: !!LINE_CHANNEL_SECRET,
-  tokenLength: LINE_CHANNEL_ACCESS_TOKEN.length,
-})
-
 // LINEにメッセージ送信
 async function replyMessage(replyToken: string, messages: LineMessage[]) {
-  console.log('Attempting to reply:', { replyToken, messages })
+  const { token } = getLineCredentials()
   
-  if (!LINE_CHANNEL_ACCESS_TOKEN) {
+  console.log('LINE ENV CHECK:', {
+    hasToken: !!token,
+    tokenLength: token.length,
+    envKeys: Object.keys(process.env).filter(k => k.includes('LINE')),
+  })
+  
+  if (!token) {
     console.error('LINE_CHANNEL_ACCESS_TOKEN is missing!')
     return
   }
@@ -80,7 +85,7 @@ async function replyMessage(replyToken: string, messages: LineMessage[]) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ replyToken, messages }),
     })
