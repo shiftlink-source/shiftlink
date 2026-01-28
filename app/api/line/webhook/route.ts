@@ -7,6 +7,7 @@ console.log('ENV CHECK:', {
   hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
   hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
   hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  allEnvKeys: Object.keys(process.env).filter(k => k.includes('SUPABASE')),
 })
 
 // Supabaseクライアントを関数内で作成
