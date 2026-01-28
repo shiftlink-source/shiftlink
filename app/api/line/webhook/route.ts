@@ -2,12 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createHmac } from 'crypto'
 
+// 環境変数をログ出力（デバッグ用）
+console.log('ENV CHECK:', {
+  hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+  hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+  hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+})
+
 // Supabaseクライアントを関数内で作成
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-  )
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  if (!url || !key) {
+    console.error('Missing Supabase credentials:', { url: !!url, key: !!key })
+    throw new Error('Supabase credentials not configured')
+  }
+  
+  return createClient(url, key)
 }
 
 const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET || ''
