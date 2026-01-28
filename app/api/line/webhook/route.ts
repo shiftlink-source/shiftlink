@@ -59,6 +59,13 @@ type Shift = {
   end_time: string | null
 }
 
+
+console.log('LINE ENV CHECK:', {
+  hasToken: !!LINE_CHANNEL_ACCESS_TOKEN,
+  hasSecret: !!LINE_CHANNEL_SECRET,
+  tokenLength: LINE_CHANNEL_ACCESS_TOKEN.length,
+})
+
 // LINEにメッセージ送信
 async function replyMessage(replyToken: string, messages: LineMessage[]) {
   console.log('Attempting to reply:', { replyToken, messages })
