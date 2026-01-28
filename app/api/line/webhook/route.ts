@@ -17,8 +17,8 @@ function getSupabase() {
 // LINE認証情報を取得
 function getLineCredentials() {
   return {
-    secret: process.env.NEXT_PUBLIC_LINE_CHANNEL_SECRET || process.env.LINE_CHANNEL_SECRET || '',
-    token: process.env.NEXT_PUBLIC_LINE_CHANNEL_ACCESS_TOKEN || process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
+    secret: process.env.LINE_CHANNEL_SECRET || '',
+    token: process.env.LINE_ACCESS_TOKEN || '',
   }
 }
 
@@ -72,7 +72,7 @@ async function replyMessage(replyToken: string, messages: LineMessage[]) {
   console.log('LINE ENV CHECK:', {
     hasToken: !!token,
     tokenLength: token.length,
-    envKeys: Object.keys(process.env).filter(k => k.includes('LINE')),
+    allEnvKeys: Object.keys(process.env).length,
   })
   
   if (!token) {
