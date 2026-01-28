@@ -22,7 +22,7 @@ export default function SignupPage() {
     setError('')
 
     // 1. ユーザー作成
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const { error: authError } = await supabase.auth.signUp({
       email,
       password,
     })

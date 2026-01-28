@@ -22,7 +22,7 @@ const menuItems = [
   { href: '/dashboard/settings', label: '設定', icon: Settings },
 ]
 
-export default function Sidebar({ store }: { store: any }) {
+export default function Sidebar({ store }: { store: { name?: string } | null }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()

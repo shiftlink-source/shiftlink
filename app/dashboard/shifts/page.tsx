@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths } from 'date-fns'
+import { format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import ShiftCalendar from '@/components/shifts/ShiftCalendar'
 
@@ -18,7 +18,6 @@ export default async function ShiftsPage({
     .eq('owner_email', user?.email)
     .single()
 
-  // 月の取得（デフォルトは今月）
   const currentMonth = searchParams.month 
     ? new Date(searchParams.month + '-01') 
     : new Date()
@@ -26,7 +25,6 @@ export default async function ShiftsPage({
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
 
-  // シフトデータ取得
   const { data: shifts } = await supabase
     .from('shifts')
     .select('*, employees(name)')
@@ -34,13 +32,6 @@ export default async function ShiftsPage({
     .gte('work_date', format(monthStart, 'yyyy-MM-dd'))
     .lte('work_date', format(monthEnd, 'yyyy-MM-dd'))
     .order('work_date', { ascending: true })
-
-  // 従業員データ取得
-  const { data: employees } = await supabase
-    .from('employees')
-    .select('*')
-    .eq('store_id', store?.id)
-    .eq('status', 'active')
 
   const prevMonth = format(subMonths(currentMonth, 1), 'yyyy-MM')
   const nextMonth = format(addMonths(currentMonth, 1), 'yyyy-MM')
@@ -57,7 +48,6 @@ export default async function ShiftsPage({
         </Link>
       </div>
 
-      {/* 月選択 */}
       <div className="flex items-center justify-center gap-4 mb-6">
         <Link
           href={`/dashboard/shifts?month=${prevMonth}`}
@@ -76,14 +66,11 @@ export default async function ShiftsPage({
         </Link>
       </div>
 
-      {/* カレンダー */}
       <ShiftCalendar 
         currentMonth={currentMonth}
         shifts={shifts || []}
-        employees={employees || []}
       />
 
-      {/* 凡例 */}
       <div className="mt-6 flex gap-4 text-sm">
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 bg-yellow-100 border border-yellow-300 rounded"></span>

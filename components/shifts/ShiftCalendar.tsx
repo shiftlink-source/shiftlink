@@ -1,7 +1,6 @@
 'use client'
 
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isToday } from 'date-fns'
-import { ja } from 'date-fns/locale'
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday } from 'date-fns'
 import Link from 'next/link'
 
 type Shift = {
@@ -13,28 +12,20 @@ type Shift = {
   employees: { name: string } | null
 }
 
-type Employee = {
-  id: string
-  name: string
-}
-
 type Props = {
   currentMonth: Date
   shifts: Shift[]
-  employees: Employee[]
 }
 
 const dayNames = ['日', '月', '火', '水', '木', '金', '土']
 
-export default function ShiftCalendar({ currentMonth, shifts, employees }: Props) {
+export default function ShiftCalendar({ currentMonth, shifts }: Props) {
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd })
   
-  // 月の最初の曜日を取得（カレンダーの空白用）
   const startDayOfWeek = getDay(monthStart)
 
-  // 日付ごとのシフトをグループ化
   const shiftsByDate: { [key: string]: Shift[] } = {}
   shifts.forEach(shift => {
     const dateKey = shift.work_date
@@ -46,7 +37,6 @@ export default function ShiftCalendar({ currentMonth, shifts, employees }: Props
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      {/* 曜日ヘッダー */}
       <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-100">
         {dayNames.map((day, index) => (
           <div
@@ -60,20 +50,15 @@ export default function ShiftCalendar({ currentMonth, shifts, employees }: Props
         ))}
       </div>
 
-      {/* カレンダー本体 */}
       <div className="grid grid-cols-7">
-        {/* 月初の空白 */}
         {Array.from({ length: startDayOfWeek }).map((_, index) => (
           <div key={`empty-${index}`} className="h-32 border-b border-r border-gray-100 bg-gray-50" />
         ))}
 
-        {/* 日付 */}
         {days.map((day) => {
           const dateKey = format(day, 'yyyy-MM-dd')
           const dayShifts = shiftsByDate[dateKey] || []
           const dayOfWeek = getDay(day)
-          const approvedCount = dayShifts.filter(s => s.status === 'approved').length
-          const requestedCount = dayShifts.filter(s => s.status === 'requested').length
 
           return (
             <Link
@@ -89,7 +74,6 @@ export default function ShiftCalendar({ currentMonth, shifts, employees }: Props
                 {format(day, 'd')}
               </div>
               
-              {/* シフト表示 */}
               <div className="space-y-1">
                 {dayShifts.slice(0, 3).map((shift) => (
                   <div
