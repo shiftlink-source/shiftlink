@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createHmac } from 'crypto'
 
-// Supabaseクライアント（anon keyを使用）
+// Supabaseクライアント
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const key = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
   if (!url || !key) {
     throw new Error('Supabase credentials not configured')
@@ -14,8 +14,8 @@ function getSupabase() {
   return createClient(url, key)
 }
 
-const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET || ''
-const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN || ''
+const LINE_CHANNEL_SECRET = process.env.NEXT_PUBLIC_LINE_CHANNEL_SECRET || ''
+const LINE_CHANNEL_ACCESS_TOKEN = process.env.NEXT_PUBLIC_LINE_CHANNEL_ACCESS_TOKEN || ''
 
 // 署名検証
 function verifySignature(body: string, signature: string): boolean {
