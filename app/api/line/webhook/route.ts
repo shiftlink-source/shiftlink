@@ -61,15 +61,28 @@ type Shift = {
 
 // LINEにメッセージ送信
 async function replyMessage(replyToken: string, messages: LineMessage[]) {
-  if (!LINE_CHANNEL_ACCESS_TOKEN) return
-  await fetch('https://api.line.me/v2/bot/message/reply', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`,
-    },
-    body: JSON.stringify({ replyToken, messages }),
-  })
+  console.log('Attempting to reply:', { replyToken, messages })
+  
+  if (!LINE_CHANNEL_ACCESS_TOKEN) {
+    console.error('LINE_CHANNEL_ACCESS_TOKEN is missing!')
+    return
+  }
+  
+  try {
+    const response = await fetch('https://api.line.me/v2/bot/message/reply', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`,
+      },
+      body: JSON.stringify({ replyToken, messages }),
+    })
+    
+    const result = await response.text()
+    console.log('LINE API response:', response.status, result)
+  } catch (error) {
+    console.error('LINE API error:', error)
+  }
 }
 
 export async function POST(request: NextRequest) {
