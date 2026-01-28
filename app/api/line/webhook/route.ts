@@ -16,6 +16,9 @@ function getSupabase() {
 
 // LINE認証情報を取得
 function getLineCredentials() {
+  // 全ての環境変数キーを出力
+  console.log('ALL ENV KEYS:', Object.keys(process.env).sort())
+  
   return {
     secret: process.env.LINE_CHANNEL_SECRET || '',
     token: process.env.LINE_ACCESS_TOKEN || '',
