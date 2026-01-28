@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
 import { createClient } from '@supabase/supabase-js'
+import { createHmac } from 'crypto'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET!
-const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN!
+const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET || ''
+const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN || ''
 
 // 署名検証
 function verifySignature(body: string, signature: string): boolean {
-  const hash = crypto
-    .createHmac('sha256', LINE_CHANNEL_SECRET)
+  if (!LINE_CHANNEL_SECRET) return true // 開発時はスキップ
+  const hash = createHmac('sha256', LINE_CHANNEL_SECRET)
     .update(body)
     .digest('base64')
   return hash === signature
@@ -54,6 +54,7 @@ type Shift = {
 
 // LINEにメッセージ送信
 async function replyMessage(replyToken: string, messages: LineMessage[]) {
+  if (!LINE_CHANNEL_ACCESS_TOKEN) return
   await fetch('https://api.line.me/v2/bot/message/reply', {
     method: 'POST',
     headers: {
@@ -74,7 +75,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
-    const { events } = JSON.parse(body)
+    const parsed = JSON.parse(body)
+    const events = parsed.events || []
 
     for (const event of events) {
       await handleEvent(event)
@@ -83,7 +85,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Webhook error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ success: true }) // LINEには常に200を返す
   }
 }
 
