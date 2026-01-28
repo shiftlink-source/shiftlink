@@ -2,18 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createHmac } from 'crypto'
 
-// Service Role Keyを使用（RLSをバイパス）
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// Supabaseクライアントを関数内で作成
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  )
+}
 
 const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET || ''
 const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN || ''
 
 // 署名検証
 function verifySignature(body: string, signature: string): boolean {
-  if (!LINE_CHANNEL_SECRET) return true // 開発時はスキップ
+  if (!LINE_CHANNEL_SECRET) return true
   const hash = createHmac('sha256', LINE_CHANNEL_SECRET)
     .update(body)
     .digest('base64')
@@ -71,7 +73,6 @@ export async function POST(request: NextRequest) {
     const body = await request.text()
     const signature = request.headers.get('x-line-signature') || ''
 
-    // 署名検証
     if (!verifySignature(body, signature)) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Webhook error:', error)
-    return NextResponse.json({ success: true }) // LINEには常に200を返す
+    return NextResponse.json({ success: true })
   }
 }
 
@@ -102,6 +103,8 @@ async function handleEvent(event: LineEvent) {
 }
 
 async function handleFollow(lineUserId: string, replyToken: string) {
+  const supabase = getSupabase()
+  
   const { data: employee } = await supabase
     .from('employees')
     .select('*')
@@ -126,6 +129,7 @@ async function handleFollow(lineUserId: string, replyToken: string) {
 }
 
 async function handleMessage(lineUserId: string, text: string, replyToken: string) {
+  const supabase = getSupabase()
   const lowerText = text.toLowerCase().trim()
 
   const { data: employee } = await supabase
@@ -162,6 +166,7 @@ async function handleMessage(lineUserId: string, text: string, replyToken: strin
 }
 
 async function handleClockIn(employee: Employee, replyToken: string) {
+  const supabase = getSupabase()
   const today = new Date().toISOString().split('T')[0]
   const now = new Date().toISOString()
 
@@ -219,6 +224,7 @@ async function handleClockIn(employee: Employee, replyToken: string) {
 }
 
 async function handleClockOut(employee: Employee, replyToken: string) {
+  const supabase = getSupabase()
   const today = new Date().toISOString().split('T')[0]
   const now = new Date().toISOString()
 
@@ -287,6 +293,7 @@ async function handleClockOut(employee: Employee, replyToken: string) {
 }
 
 async function handleShiftCheck(employee: Employee, replyToken: string) {
+  const supabase = getSupabase()
   const today = new Date()
   const weekEnd = new Date(today)
   weekEnd.setDate(today.getDate() + 7)
@@ -326,6 +333,7 @@ async function handleShiftCheck(employee: Employee, replyToken: string) {
 }
 
 async function handleLinking(lineUserId: string, text: string, replyToken: string) {
+  const supabase = getSupabase()
   const code = text.trim().toUpperCase()
 
   const { data: employee } = await supabase
